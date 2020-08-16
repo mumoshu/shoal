@@ -329,7 +329,7 @@ func (a *App) Sync(config Config) error {
 			return err
 		}
 
-		if v := config.Foods.HelmDiff; v != "" {
+		if v := config.Helm.Plugins.Diff; v != "" {
 			pluginInstall := exec.Command(filepath.Join(a.BinPath(), "helm"), "plugin", "install", "https://github.com/databus23/helm-diff", "--version", v)
 			if err := pluginInstall.Run(); err != nil {
 				return fmt.Errorf("installing helm-diff: %w", err)
