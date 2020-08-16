@@ -1,0 +1,6 @@
+rig: "https://github.com/fishworks/fish-food"
+foods:
+  helmfile: ">= 0.125.0"
+  helm:     ">= 3.3.0"
+  kubectl:  ">= 1.18.0"
+  eksctl:   ">= 0.23.0"

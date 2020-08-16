@@ -1,0 +1,13 @@
+module github.com/mumoshu/shoal
+
+go 1.14
+
+require (
+	github.com/Masterminds/semver v1.5.0
+	github.com/fishworks/gofish v0.13.1-0.20200806145805-309ee2606318
+	github.com/yuin/gluamapper v0.0.0-20150323120927-d836955830e7
+	github.com/yuin/gopher-lua v0.0.0-20191220021717-ab39c6098bdb
+	gopkg.in/yaml.v2 v2.2.2
+)
+
+replace github.com/fishworks/gofish => github.com/mumoshu/gofish v0.13.1-0.20200816002522-8b4712fe1ee3
