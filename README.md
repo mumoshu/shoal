@@ -1,5 +1,7 @@
 # Shoal
 
+![image](https://user-images.githubusercontent.com/22009/90324679-b1e27a00-dfac-11ea-8e63-8ac00f56b9a7.png)
+
 `Shoal` is a declarative tool that installs sets of [GoFish](https://github.com/fishworks/gofish/) foods.
 
 # Usage
