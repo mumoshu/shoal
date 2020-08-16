@@ -22,6 +22,9 @@ foods:
   kubectl: ">= 1.18.0"
   eksctl: ">= 0.23.0"
 
+  # Additionally, you can declare whatever food found in
+  #   https://github.com/fishworks/fish-food/tree/main/Food
+
 helm:
   plugins:
     diff: ">= 3.1.3"

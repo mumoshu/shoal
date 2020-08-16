@@ -355,5 +355,11 @@ func (a *App) Sync(config Config) error {
 		}
 	}
 
+	for food, version := range config.Foods.Others {
+		if err := a.Ensure(rig, food, version); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

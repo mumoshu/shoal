@@ -12,6 +12,8 @@ type Foods struct {
 	Helm     string `yaml:"helm"`
 	Kubectl  string `yaml:"kubectl"`
 	Eksctl   string `yaml:"eksctl"`
+
+	Others map[string]string `yaml:",inline"`
 }
 
 type Helm struct {
