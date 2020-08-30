@@ -1,0 +1,15 @@
+rig: &rig https://github.com/fishworks/fish-food
+
+dependencies:
+- rig: *rig
+  food: helmfile
+  version: ">= 0.125.0"
+- rig: *rig
+  food: helm
+  version: ">= 3.3.0"
+- rig: *rig
+  food: kubectl
+  version: ">= 1.18.0"
+- rig: *rig
+  food: eksctl
+  version: ">= 0.23.0"

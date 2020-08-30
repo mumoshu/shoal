@@ -30,13 +30,20 @@ func main() {
 	defer os.RemoveAll(rig)
 
 	if err := s.Sync(shoal.Config{
-		Rig: rig,
-		Foods: shoal.Foods{
-			Others: map[string]string{
-				"kubebuilder": "2.3.1",
-			},
-		},
 		Helm: shoal.Helm{},
+		Dependencies: []shoal.Dependency{
+			{
+				Rig:     rig,
+				Food:    "kubebuilder",
+				Version: "2.3.1",
+			},
+			{
+				Rig:     "https://github.com/fishworks/fish-food",
+				Food:    "helm",
+				Version: "3.3.0",
+			},
+
+		},
 	}); err != nil {
 		panic(err)
 	}
@@ -98,7 +105,7 @@ func main() {
 		panic(err)
 	}
 
-	helmVersion := exec.Command("helm", "version")
+	helmVersion := exec.Command(filepath.Join(s.BinPath(), "helm"), "version")
 	helmVersion.Env = append(helmVersion.Env, os.Environ()...)
 	helmVersion.Env = append(helmVersion.Env, "KUBECONFIG="+kcFile.Name())
 	if out, err := helmVersion.CombinedOutput(); err != nil {

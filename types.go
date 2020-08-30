@@ -5,6 +5,14 @@ type Config struct {
 
 	Foods Foods `yaml:"foods"`
 	Helm  Helm  `yaml:"helm"`
+
+	Dependencies []Dependency `yaml:"dependencies"`
+}
+
+type Dependency struct {
+	Rig     string `yaml:"rig"`
+	Food    string `yaml:"food"`
+	Version string `yaml:"version"`
 }
 
 type Foods struct {

@@ -11,16 +11,24 @@
 
 ## CLI
 
-Create a `shoal.yaml` and run `shoal sync [-f shoal.yaml]`:
+Create a `shoal.yaml` and run `shoal [-f shoal.yaml] sync`:
 
 ```yaml
-rig: https://github.com/fishworks/fish-food
+rig: &rig https://github.com/fishworks/fish-food
 
-foods:
-  helmfile: ">= 0.125.0"
-  helm: ">= 3.3.0"
-  kubectl: ">= 1.18.0"
-  eksctl: ">= 0.23.0"
+dependencies:
+- rig: *rig
+  food: helmfile
+  version: ">= 0.125.0"
+- rig: *rig
+  food: helm
+  version: ">= 3.3.0"
+- rig: *rig
+  food: kubectl
+  version: ">= 1.18.0"
+- rig: *rig
+  food: eksctl
+  version: ">= 0.23.0"
 
   # Additionally, you can declare whatever food found in
   #   https://github.com/fishworks/fish-food/tree/main/Food
@@ -50,12 +58,27 @@ func example() {
 	}
 
 	if err := app.Sync(shoal.Config{
-		Rig: rig,
-		Foods: shoal.Foods{
-			Helmfile: ">= 0.125.0",
-			Helm:     ">= 3.3.0",
-			Kubectl:  ">= 1.18.0",
-			Eksctl:   ">= 0.23.0",
+		Dependencies: []shoal.Dependency{
+			{
+				Rig:     rig,
+				Food:    "helmfile",
+				Version: ">= 0.125.0",
+			},
+			{
+				Rig:     rig,
+				Food:    "helm",
+				Version: ">= 3.3.0",
+			},
+			{
+				Rig:     rig,
+				Food:    "kubectl",
+				Version: ">= 1.18.0",
+			},
+			{
+				Rig:     rig,
+				Food:    "eksctl",
+				Version: ">= 0.23.0",
+			},
 		},
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

@@ -363,6 +363,12 @@ func (a *App) Sync(config Config) error {
 		}
 	}
 
+	for _, d := range config.Dependencies {
+		if err := a.Ensure(d.Rig, d.Food, d.Version); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
