@@ -1,4 +1,4 @@
-project_name: vals
+project_name: shoal
 builds:
   - id: shoal
     main: ./cmd/shoal
