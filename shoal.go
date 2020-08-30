@@ -25,6 +25,8 @@ import (
 
 var DefaultRootDir = ".shoal"
 
+var Version string
+
 func New() (*App, error) {
 	wd, err := os.Getwd()
 	if err != nil {
