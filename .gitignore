@@ -1,6 +1,7 @@
 *~
 .shoal
 .idea
-shoal
+/shoal
+/dist
 examples/k8s-e2e/k8s-e2e-example
 go-example
