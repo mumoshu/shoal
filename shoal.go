@@ -9,6 +9,7 @@ import (
 	"github.com/fishworks/gofish/pkg/home"
 	"github.com/fishworks/gofish/pkg/ohai"
 	"github.com/fishworks/gofish/pkg/rig/installer"
+	"github.com/mumoshu/shoal/pkg/gitrepo"
 	"github.com/yuin/gluamapper"
 	"github.com/yuin/gopher-lua"
 	"io/ioutil"
@@ -182,13 +183,14 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 		filePath := filepath.Join("Food", fmt.Sprintf("%s.lua", food))
 
-		var gitLogStdout bytes.Buffer
+		var gitLogStdout, gitLogStderr bytes.Buffer
 
 		gitLog := exec.Command("git", "log", "--oneline", "--no-color", "--", filePath)
 		gitLog.Dir = workspaceDir
 		gitLog.Stdout = &gitLogStdout
+		gitLog.Stderr = &gitLogStderr
 		if err := gitLog.Run(); err != nil {
-			return fmt.Errorf("running git-log: %w", err)
+			return fmt.Errorf("running git-log: %w\n\nSTDERR:\n%s", err, gitLogStderr.String())
 		}
 		gitLogOutput := gitLogStdout.String()
 
@@ -362,4 +364,8 @@ func (a *App) Sync(config Config) error {
 	}
 
 	return nil
+}
+
+func (a *App) TempRig(source string) (string, error) {
+	return gitrepo.TempDir(source)
 }
