@@ -1,22 +1,24 @@
-package gitrepo
+package shoal
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
-func TempDir(source string) (string, error) {
+func (a *App) TempDir(source string) (string, error) {
+	g := a.git
+	if g == nil {
+		g = &NativeGit{}
+	}
+
 	tempRemote, err := ioutil.TempDir(os.TempDir(), "shoal-remote")
 	if err != nil {
 		return "", err
 	}
 
-	gitInit := exec.Command("git", "init", "--bare", tempRemote)
-	if err := gitInit.Run(); err != nil {
+	if err := g.InitBare(tempRemote); err != nil {
 		return "", err
 	}
 
@@ -26,9 +28,17 @@ func TempDir(source string) (string, error) {
 	}
 	defer os.RemoveAll(tempLocal)
 
-	cmd := exec.Command("git", "clone", tempRemote, tempLocal)
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("running git-clone: %w", err)
+	// go-git fails on cloning an empty repository. So init/add remote instead.
+	//if err := g.Clone(tempRemote, tempLocal); err != nil {
+	//	return "", err
+	//}
+
+	if err := g.Init(tempLocal); err != nil {
+		return "", err
+	}
+
+	if err := g.AddRemote(tempLocal, "origin", tempRemote); err != nil {
+		return "", err
 	}
 
 	sourceAbs, err := filepath.Abs(source)
@@ -69,10 +79,8 @@ func TempDir(source string) (string, error) {
 		_ = dst.Close()
 		_ = src.Close()
 
-		cmd := exec.Command("git", "add", rel)
-		cmd.Dir = tempLocal
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("running git-add: %w", err)
+		if err := g.Add(tempLocal, rel); err != nil {
+			return err
 		}
 
 		return nil
@@ -86,23 +94,17 @@ func TempDir(source string) (string, error) {
 	}
 
 	for k, v := range config {
-		gitConfig := exec.Command("git", "config", k, v)
-		gitConfig.Dir = tempLocal
-		if out, err := gitConfig.CombinedOutput(); err != nil {
-			return "", fmt.Errorf("running git-config: %w\n\nCOMBINED OUTPUT:\n%s", err, string(out))
+		if err := g.Config(tempLocal, k, v); err != nil {
+			return "", err
 		}
 	}
 
-	gitCommit := exec.Command("git", "commit", "-m", "first commit")
-	gitCommit.Dir = tempLocal
-	if out, err := gitCommit.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("running git-commit: %w\n\nCOMBINED OUTPUT:\n%s", err, string(out))
+	if err := g.Commit(tempLocal, "first commit"); err != nil {
+		return "", err
 	}
 
-	gitPush := exec.Command("git", "push", "origin", "master")
-	gitPush.Dir = tempLocal
-	if err := gitPush.Run(); err != nil {
-		return "", fmt.Errorf("running git-push: %w", err)
+	if err := g.Push(tempLocal, "origin", "master"); err != nil {
+		return "", err
 	}
 
 	return tempRemote, nil

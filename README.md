@@ -96,6 +96,23 @@ func example() {
 }
 ```
 
+# go-git integration
+
+`shoal` has two implementations of the `provider`:
+
+- `native` (default)
+- `go-git`
+
+The `go-git` provider uses [go-git](https://github.com/go-git/go-git) instead of the `git` command installed on your system,
+for whatever git operation it needs to run, like `clone`, `log`, etc.
+
+To enable the `go-git` provider, add the `git` section to your config, and set `provider` to `go-git` in it:
+
+```yaml
+git:
+  provider: go-git
+```
+
 # History and Context
 
 My initial goal was to build a cross-platform package manager that can be embedded into my [terraform-provider-eksctl](https://github.com/mumoshu/terraform-provider-eksctl) and [terraform-provider-helmfile](https://github.com/mumoshu/terraform-provider-helmfile),

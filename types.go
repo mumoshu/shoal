@@ -1,12 +1,18 @@
 package shoal
 
 type Config struct {
+	Git Git `yaml:"git"`
+
 	Rig string `yaml:"rig"`
 
 	Foods Foods `yaml:"foods"`
 	Helm  Helm  `yaml:"helm"`
 
 	Dependencies []Dependency `yaml:"dependencies"`
+}
+
+type Git struct {
+	Provider string `yaml:"provider"`
 }
 
 type Dependency struct {

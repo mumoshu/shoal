@@ -23,13 +23,25 @@ func main() {
 		panic(err)
 	}
 
+	if err := s.InitGitProvider(shoal.Config{
+		Git: shoal.Git{
+			//Provider: "go-git",
+			Provider: "",
+		},
+	}); err != nil {
+		panic(err)
+	}
+
 	rig, err := s.TempRig("./rig")
 	if err != nil {
 		panic(err)
 	}
 	defer os.RemoveAll(rig)
 
-	if err := s.Sync(shoal.Config{
+	conf := shoal.Config{
+		Git: shoal.Git{
+			Provider: "go-git",
+		},
 		Helm: shoal.Helm{},
 		Dependencies: []shoal.Dependency{
 			{
@@ -42,9 +54,9 @@ func main() {
 				Food:    "helm",
 				Version: "3.3.0",
 			},
-
 		},
-	}); err != nil {
+	}
+	if err := s.Sync(conf); err != nil {
 		panic(err)
 	}
 

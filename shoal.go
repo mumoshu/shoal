@@ -1,7 +1,6 @@
 package shoal
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"fmt"
 	"github.com/Masterminds/semver"
@@ -9,7 +8,6 @@ import (
 	"github.com/fishworks/gofish/pkg/home"
 	"github.com/fishworks/gofish/pkg/ohai"
 	"github.com/fishworks/gofish/pkg/rig/installer"
-	"github.com/mumoshu/shoal/pkg/gitrepo"
 	"github.com/yuin/gluamapper"
 	"github.com/yuin/gopher-lua"
 	"io/ioutil"
@@ -48,6 +46,8 @@ func New() (*App, error) {
 }
 
 type App struct {
+	git GitClient
+
 	RootDir string
 
 	fetchedMutex sync.Mutex
@@ -92,6 +92,8 @@ func (a *App) init() error {
 }
 
 func (a *App) Ensure(rig, food, constraint string) error {
+	g := a.git
+
 	var constraints *semver.Constraints
 
 	if constraint != "" {
@@ -162,10 +164,8 @@ func (a *App) Ensure(rig, food, constraint string) error {
 			defer a.fetchedMutex.Unlock()
 
 			if fetched := a.fetched[workspaceDir]; !fetched {
-				gitFetch := exec.Command("git", "fetch", "origin")
-				gitFetch.Dir = workspaceDir
-				if trace, err := gitFetch.CombinedOutput(); err != nil {
-					return fmt.Errorf("running git-fetch: %w\n\nCOMBINED OUTPUT:\n%s", err, trace)
+				if err := g.Fetch(workspaceDir); err != nil {
+					return err
 				}
 
 				a.fetched[workspaceDir] = true
@@ -173,9 +173,8 @@ func (a *App) Ensure(rig, food, constraint string) error {
 		} else {
 			workspaceDir = filepath.Join(workspaceCacheDir, fmt.Sprintf("%d", len(fileInfoList)))
 
-			gitClone := exec.Command("git", "clone", rig, workspaceDir)
-			if trace, err := gitClone.CombinedOutput(); err != nil {
-				return fmt.Errorf("running git-clone: %w\n\nCOMBINED OUTPUT:\n%s", err, trace)
+			if err := g.Clone(rig, workspaceDir); err != nil {
+				return err
 			}
 
 			if err := ioutil.WriteFile(filepath.Join(workspaceDir, "RIG"), []byte(rig), 0644); err != nil {
@@ -185,16 +184,10 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 		filePath := filepath.Join("Food", fmt.Sprintf("%s.lua", food))
 
-		var gitLogStdout, gitLogStderr bytes.Buffer
-
-		gitLog := exec.Command("git", "log", "--oneline", "--no-color", "--", filePath)
-		gitLog.Dir = workspaceDir
-		gitLog.Stdout = &gitLogStdout
-		gitLog.Stderr = &gitLogStderr
-		if err := gitLog.Run(); err != nil {
-			return fmt.Errorf("running git-log: %w\n\nSTDERR:\n%s", err, gitLogStderr.String())
+		gitLogOutput, err := g.Log(workspaceDir, filePath)
+		if err != nil {
+			return err
 		}
-		gitLogOutput := gitLogStdout.String()
 
 		for _, l := range strings.Split(gitLogOutput, "\n") {
 			items := strings.SplitN(l, " ", 2)
@@ -206,16 +199,10 @@ func (a *App) Ensure(rig, food, constraint string) error {
 			commitID := items[0]
 			description := items[1]
 
-			var gitShowStdout bytes.Buffer
-
-			gitShow := exec.Command("git", "show", fmt.Sprintf("%s:%s", commitID, filePath))
-			gitShow.Dir = workspaceDir
-			gitShow.Stdout = &gitShowStdout
-			if err := gitShow.Run(); err != nil {
-				return fmt.Errorf("running git-show: %w", err)
+			luaScript, err := g.Show(workspaceDir, commitID, filePath)
+			if err != nil {
+				return err
 			}
-
-			luaScript := gitShowStdout.String()
 
 			var food gofish.Food
 
@@ -325,6 +312,22 @@ func (a *App) BinPath() string {
 	return home.BinPath()
 }
 
+func (a *App) InitGitProvider(config Config) error {
+	var g GitClient
+	switch p := config.Git.Provider; p {
+	case "go-git":
+		g = &GoGit{}
+	case "":
+		g = &NativeGit{}
+	default:
+		return fmt.Errorf("invalid git.provider: %s", p)
+	}
+
+	a.git = g
+
+	return nil
+}
+
 func (a *App) Sync(config Config) error {
 	rig := config.Rig
 
@@ -375,5 +378,5 @@ func (a *App) Sync(config Config) error {
 }
 
 func (a *App) TempRig(source string) (string, error) {
-	return gitrepo.TempDir(source)
+	return a.TempDir(source)
 }
