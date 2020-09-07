@@ -7,6 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -282,7 +283,9 @@ func (n *GoGit) Log(workspaceDir, filePath string) (string, error) {
 	var gitLogOutput bytes.Buffer
 
 	if err := c.ForEach(func(commit *object.Commit) error {
-		if _, err := gitLogOutput.Write([]byte(fmt.Sprintf("%s %s\n", commit.ID(), commit.Message))); err != nil {
+		lines := strings.Split(commit.Message, "\n")
+		oneline := strings.TrimSpace(lines[0])
+		if _, err := gitLogOutput.Write([]byte(fmt.Sprintf("%s %s\n", commit.ID(), oneline))); err != nil {
 			return fmt.Errorf("proessing commit %q: %w", commit.ID(), err)
 		}
 		return nil
