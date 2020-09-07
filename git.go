@@ -2,6 +2,7 @@ package shoal
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -282,14 +283,20 @@ func (n *GoGit) Log(workspaceDir, filePath string) (string, error) {
 
 	var gitLogOutput bytes.Buffer
 
+	skip := errors.New("skip remaining")
+
 	if err := c.ForEach(func(commit *object.Commit) error {
 		lines := strings.Split(commit.Message, "\n")
 		oneline := strings.TrimSpace(lines[0])
+		if _, err := commit.File(filePath); err != nil {
+			// `go-git log -- PATH` seems to return commits that doesn't have any object at PATH.
+			return skip
+		}
 		if _, err := gitLogOutput.Write([]byte(fmt.Sprintf("%s %s\n", commit.ID(), oneline))); err != nil {
 			return fmt.Errorf("proessing commit %q: %w", commit.ID(), err)
 		}
 		return nil
-	}); err != nil {
+	}); err != nil && err != skip {
 		return "", fmt.Errorf("go-git interating log entry: %w", err)
 	}
 
