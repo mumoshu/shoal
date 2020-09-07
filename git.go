@@ -250,7 +250,7 @@ func (n *GoGit) Fetch(workspaceDir string) error {
 
 	if err := r.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
-	}); err != nil {
+	}); err != nil && err.Error() != "already up-to-date" {
 		return fmt.Errorf("go-git fetching %q: %w", workspaceDir, err)
 	}
 
