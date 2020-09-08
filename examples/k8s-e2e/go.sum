@@ -292,6 +292,10 @@ github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/mumoshu/gofish v0.13.1-0.20200816002522-8b4712fe1ee3 h1:2cFsns6tRV6xrz6GY/DTOruRYn+UBP7PDYm4VZQeWjo=
 github.com/mumoshu/gofish v0.13.1-0.20200816002522-8b4712fe1ee3/go.mod h1:+tioljxX31bBiVquRFxuofNwXHDqeeJZrCXfsRUX7ec=
+github.com/mumoshu/gofish v0.13.1-0.20200908031540-08d193d442ab h1:71jReDiWl9O/VHUeTXfGLvhjGILTlfJb6MAS4b0yvtM=
+github.com/mumoshu/gofish v0.13.1-0.20200908031540-08d193d442ab/go.mod h1:+tioljxX31bBiVquRFxuofNwXHDqeeJZrCXfsRUX7ec=
+github.com/mumoshu/gofish v0.13.1-0.20200908033248-ab2d494fb15c h1:psoQG0FYSJesI3ZNL6FDBQVMuS+xj7weacaEJ51Jzi4=
+github.com/mumoshu/gofish v0.13.1-0.20200908033248-ab2d494fb15c/go.mod h1:+tioljxX31bBiVquRFxuofNwXHDqeeJZrCXfsRUX7ec=
 github.com/mumoshu/shoal v0.0.0-20200816053351-ee2ec69f44d2 h1:oicJoJyAevWGSprXNI84bGvQboHcX9RS0WvKiothb6s=
 github.com/mumoshu/shoal v0.0.0-20200816053351-ee2ec69f44d2/go.mod h1:rbLlsL6L7WYp7bl772NPjwERR+eEzjQ1pbGiS1lGTe0=
 github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=

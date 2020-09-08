@@ -10,6 +10,6 @@ require (
 )
 
 replace (
-	github.com/fishworks/gofish => github.com/mumoshu/gofish v0.13.1-0.20200816002522-8b4712fe1ee3
+	github.com/fishworks/gofish => github.com/mumoshu/gofish v0.13.1-0.20200908033248-ab2d494fb15c
 	github.com/mumoshu/shoal => ../../
 )
