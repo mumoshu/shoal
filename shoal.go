@@ -38,10 +38,6 @@ func New() (*App, error) {
 		fetched: map[string]bool{},
 	}
 
-	if err := app.init(); err != nil {
-		return nil, err
-	}
-
 	return app, nil
 }
 
@@ -60,18 +56,18 @@ type versionedFood struct {
 	food         gofish.Food
 }
 
-func (a *App) init() error {
+func (a *App) setEnv() {
 	GofishRoot := a.RootDir
 
 	os.Setenv("GOFISH_HOME", GofishRoot)
 	os.Setenv("GOFISH_BINPATH", filepath.Join(GofishRoot, "bin"))
 	os.Setenv("HOME", GofishRoot)
+}
 
-	if err := os.RemoveAll(GofishRoot); err != nil {
-		return err
-	}
+func (a *App) Init() error {
+	a.setEnv()
 
-	dirs := []string{
+	cands := []string{
 		home.String(),
 		home.Barrel(),
 		home.Rigs(),
@@ -79,12 +75,22 @@ func (a *App) init() error {
 		home.Cache(),
 	}
 
-	fmt.Printf("The following new directories will be created:\n")
-	fmt.Println(strings.Join(dirs, "\n"))
+	var dirs []string
 
-	for _, d := range dirs {
-		if err := os.MkdirAll(d, 0755); err != nil {
-			return err
+	for _, d := range cands {
+		if r, _ := os.Stat(d); r == nil {
+			dirs = append(dirs, d)
+		}
+	}
+
+	if len(dirs) > 0 {
+		fmt.Printf("The following new directories will be created:\n")
+		fmt.Println(strings.Join(dirs, "\n"))
+
+		for _, d := range dirs {
+			if err := os.MkdirAll(d, 0755); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -92,6 +98,8 @@ func (a *App) init() error {
 }
 
 func (a *App) Ensure(rig, food, constraint string) error {
+	a.setEnv()
+
 	g := a.git
 
 	var constraints *semver.Constraints

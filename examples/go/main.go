@@ -18,6 +18,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := app.Init(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
 	if err := app.Sync(shoal.Config{
 		Rig: rig,
 		Foods: shoal.Foods{
