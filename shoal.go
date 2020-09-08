@@ -343,12 +343,37 @@ func (a *App) Sync(config Config) error {
 		if err := a.Ensure(rig, "helm", v); err != nil {
 			return err
 		}
+	}
 
-		if v := config.Helm.Plugins.Diff; v != "" {
-			pluginInstall := exec.Command(filepath.Join(a.BinPath(), "helm"), "plugin", "install", "https://github.com/databus23/helm-diff", "--version", v)
-			if err := pluginInstall.Run(); err != nil {
-				return fmt.Errorf("installing helm-diff: %w", err)
+	if v := config.Helm.Plugins.Diff; v != "" {
+		pluginInstall := exec.Command(filepath.Join(a.BinPath(), "helm"), "plugin", "install", "https://github.com/databus23/helm-diff", "--version", v)
+
+		var homeSet bool
+
+		for _, e := range os.Environ() {
+			nameValue := strings.Split(e, "=")
+			name := nameValue[0]
+
+			if len(nameValue) > 1 {
+				value := nameValue[1]
+
+				if name == "HOME" {
+					value = a.RootDir
+					homeSet = true
+				}
+
+				pluginInstall.Env = append(pluginInstall.Env, name+"="+value)
+			} else {
+				pluginInstall.Env = append(pluginInstall.Env, name)
 			}
+		}
+
+		if !homeSet {
+			pluginInstall.Env = append(pluginInstall.Env, "HOME="+a.RootDir)
+		}
+
+		if err := pluginInstall.Run(); err != nil {
+			return fmt.Errorf("installing helm-diff: %w", err)
 		}
 	}
 
