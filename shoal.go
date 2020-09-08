@@ -377,7 +377,11 @@ func (a *App) Sync(config Config) error {
 			if o != nil {
 				out = string(o)
 			}
-			return fmt.Errorf("installing helm-diff: %w\nCOMBINED OUTPUT:\n%s", err, out)
+
+			// TODO Upgrade the plugin if it's already installed
+			if !strings.HasPrefix(out, "Error: plugin already exists") {
+				return fmt.Errorf("installing helm-diff: %w\nCOMBINED OUTPUT:\n%s", err, out)
+			}
 		}
 	}
 
