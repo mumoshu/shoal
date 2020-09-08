@@ -372,8 +372,12 @@ func (a *App) Sync(config Config) error {
 			pluginInstall.Env = append(pluginInstall.Env, "HOME="+a.RootDir)
 		}
 
-		if err := pluginInstall.Run(); err != nil {
-			return fmt.Errorf("installing helm-diff: %w", err)
+		if o, err := pluginInstall.CombinedOutput(); err != nil {
+			var out string
+			if o != nil {
+				out = string(o)
+			}
+			return fmt.Errorf("installing helm-diff: %w\nCOMBINED OUTPUT:\n%s", err, out)
 		}
 	}
 
