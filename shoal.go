@@ -350,7 +350,8 @@ func (a *App) Sync(config Config) error {
 
 		var homeSet bool
 
-		helmPluginsDir := filepath.Join(a.RootDir, "helm", "plugins")
+		helmPluginsDir := filepath.Join(a.RootDir, "Library")
+		helmPluginsHomeEnv := "XDG_DATA_HOME"
 
 		for _, e := range os.Environ() {
 			nameValue := strings.Split(e, "=")
@@ -359,7 +360,7 @@ func (a *App) Sync(config Config) error {
 			if len(nameValue) > 1 {
 				value := nameValue[1]
 
-				if name == "HELM_PLUGINS" {
+				if name == helmPluginsHomeEnv {
 					value = helmPluginsDir
 					homeSet = true
 				}
@@ -371,7 +372,7 @@ func (a *App) Sync(config Config) error {
 		}
 
 		if !homeSet {
-			pluginInstall.Env = append(pluginInstall.Env, "HELM_PLUGINS="+helmPluginsDir)
+			pluginInstall.Env = append(pluginInstall.Env, helmPluginsHomeEnv+"="+helmPluginsDir)
 		}
 
 		if o, err := pluginInstall.CombinedOutput(); err != nil {
