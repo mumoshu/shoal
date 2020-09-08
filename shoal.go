@@ -344,6 +344,36 @@ func (a *App) Sync(config Config) error {
 		}
 	}
 
+	if v := config.Foods.Kubectl; v != "" {
+		if err := a.Ensure(rig, "kubectl", v); err != nil {
+			return err
+		}
+	}
+
+	if v := config.Foods.Helmfile; v != "" {
+		if err := a.Ensure(rig, "helmfile", v); err != nil {
+			return err
+		}
+	}
+
+	if v := config.Foods.Eksctl; v != "" {
+		if err := a.Ensure(rig, "eksctl", v); err != nil {
+			return err
+		}
+	}
+
+	for food, version := range config.Foods.Others {
+		if err := a.Ensure(rig, food, version); err != nil {
+			return err
+		}
+	}
+
+	for _, d := range config.Dependencies {
+		if err := a.Ensure(d.Rig, d.Food, d.Version); err != nil {
+			return err
+		}
+	}
+
 	if v := config.Helm.Plugins.Diff; v != "" {
 		pluginInstall := exec.Command(filepath.Join(a.BinPath(), "helm"), "plugin", "install", "https://github.com/databus23/helm-diff", "--version", v)
 
@@ -384,36 +414,6 @@ func (a *App) Sync(config Config) error {
 			if !strings.HasPrefix(out, "Error: plugin already exists") {
 				return fmt.Errorf("installing helm-diff: %w\nCOMBINED OUTPUT:\n%s", err, out)
 			}
-		}
-	}
-
-	if v := config.Foods.Kubectl; v != "" {
-		if err := a.Ensure(rig, "kubectl", v); err != nil {
-			return err
-		}
-	}
-
-	if v := config.Foods.Helmfile; v != "" {
-		if err := a.Ensure(rig, "helmfile", v); err != nil {
-			return err
-		}
-	}
-
-	if v := config.Foods.Eksctl; v != "" {
-		if err := a.Ensure(rig, "eksctl", v); err != nil {
-			return err
-		}
-	}
-
-	for food, version := range config.Foods.Others {
-		if err := a.Ensure(rig, food, version); err != nil {
-			return err
-		}
-	}
-
-	for _, d := range config.Dependencies {
-		if err := a.Ensure(d.Rig, d.Food, d.Version); err != nil {
-			return err
 		}
 	}
 
