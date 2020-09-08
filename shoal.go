@@ -61,7 +61,6 @@ func (a *App) setEnv() {
 
 	os.Setenv("GOFISH_HOME", GofishRoot)
 	os.Setenv("GOFISH_BINPATH", filepath.Join(GofishRoot, "bin"))
-	os.Setenv("HOME", GofishRoot)
 }
 
 func (a *App) Init() error {
