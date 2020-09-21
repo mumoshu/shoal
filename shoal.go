@@ -175,6 +175,15 @@ func (a *App) Ensure(rig, food, constraint string) error {
 					return err
 				}
 
+				b, err := g.ShowOriginHeadBranch(workspaceDir)
+				if err != nil {
+					return err
+				}
+
+				if err := g.ForceCheckout(workspaceDir, b); err != nil {
+					return err
+				}
+
 				a.fetched[workspaceDir] = true
 			}
 		} else {

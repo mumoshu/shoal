@@ -1,6 +1,7 @@
 package shoal
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 
 type GitClient interface {
 	Fetch(string) error
+	ForceCheckout(string, string) error
 	Clone(repo string, dir string) error
 	Log(string, string) (string, error)
 	Show(string, string, string) (string, error)
@@ -26,9 +28,54 @@ type GitClient interface {
 	Push(local string, remote string, branch string) error
 	Init(dir string) error
 	AddRemote(dir string, name string, url string) error
+	ShowOriginHeadBranch(string) (string, error)
 }
 
 type NativeGit struct {
+}
+
+func (n *NativeGit) ForceCheckout(local, s string) error {
+	gitForceCheckout := exec.Command("git", "checkout", "-B", s)
+	gitForceCheckout.Dir = local
+
+	if out, err := gitForceCheckout.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v\n%s", err, string(out))
+	}
+
+	return nil
+}
+
+func (n *NativeGit) ShowOriginHeadBranch(local string) (string, error) {
+	remote := "origin"
+
+	gitRemoteShowOrigin := exec.Command("git", "remote", "show", remote)
+	gitRemoteShowOrigin.Dir = local
+
+	out, err := gitRemoteShowOrigin.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	r := bytes.NewReader(out)
+	nextLine := bufio.NewScanner(r)
+
+	p := "  HEAD branch: "
+
+	for nextLine.Scan() {
+		l := nextLine.Text()
+
+		if strings.HasPrefix(l, p) {
+			splits := strings.Split(l, p)
+			if len(splits) != 2 {
+				return "", fmt.Errorf("unexpected line: %s", l)
+			}
+
+			b := splits[1]
+			return b, nil
+		}
+	}
+
+	return "", fmt.Errorf("no line prefixed with %q found", p)
 }
 
 func (n *NativeGit) Init(dir string) error {
@@ -144,6 +191,43 @@ func (n *NativeGit) Show(workspaceDir, commitID, filePath string) (string, error
 }
 
 type GoGit struct {
+}
+
+func (n *GoGit) ForceCheckout(local, s string) error {
+	r, err := git.PlainOpen(local)
+	if err != nil {
+		return err
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	if err := w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(s),
+		Force:  true,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (n *GoGit) ShowOriginHeadBranch(local string) (string, error) {
+	r, err := git.PlainOpen(local)
+	if err != nil {
+		return "", err
+	}
+
+	h, err := r.Head()
+	if err != nil {
+		return "", err
+	}
+
+	b := h.Name().Short()
+
+	return b, nil
 }
 
 func (n *GoGit) Init(dir string) error {
