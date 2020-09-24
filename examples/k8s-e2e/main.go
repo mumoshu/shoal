@@ -18,16 +18,16 @@ import (
 var testEnv *envtest.Environment
 
 func main() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	GofishRoot := filepath.Join(wd, shoal.DefaultRootDir)
-
-	if err := os.RemoveAll(GofishRoot); err != nil {
-		panic(err)
-	}
+	//wd, err := os.Getwd()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//GofishRoot := filepath.Join(wd, shoal.DefaultRootDir)
+	//
+	//if err := os.RemoveAll(GofishRoot); err != nil {
+	//	panic(err)
+	//}
 
 	s, err := shoal.New()
 	if err != nil {
@@ -71,6 +71,11 @@ func main() {
 			},
 		},
 	}
+
+	if err := s.InitGitProvider(conf); err != nil {
+		panic(err)
+	}
+
 	if err := s.Sync(conf); err != nil {
 		panic(err)
 	}

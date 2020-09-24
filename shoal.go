@@ -155,6 +155,9 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 			bs, err := ioutil.ReadFile(rigIDFile)
 			if err != nil {
+				if os.IsNotExist(err) {
+					return fmt.Errorf("broken shoal cache: missing RIG file: please remove %s and try again", d)
+				}
 				return fmt.Errorf("reading RIG file: %w", err)
 			}
 
@@ -182,6 +185,13 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 				if err := g.ForceCheckout(workspaceDir, b); err != nil {
 					return err
+				}
+
+				// Force check-out using go-git seems to remove all the uncommitted changes to the worktree so
+				// the RIG file.
+				// We have to recreate it otherwise shoal is unable to detect if this workspace dir is that of this rig
+				if err := ioutil.WriteFile(filepath.Join(workspaceDir, "RIG"), []byte(rig), 0644); err != nil {
+					return fmt.Errorf("writing RIG file: %w", err)
 				}
 
 				a.fetched[workspaceDir] = true
