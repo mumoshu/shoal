@@ -16,8 +16,8 @@ import (
 )
 
 type GitClient interface {
-	Fetch(string) error
-	ForceCheckout(string, string) error
+	Fetch(dir string, ref string) error
+	ForceCheckout(dir string, ref string) error
 	Clone(repo string, dir string) error
 	Log(string, string) (string, error)
 	Show(string, string, string) (string, error)
@@ -142,8 +142,8 @@ func (n *NativeGit) InitBare(tempRemote string) error {
 
 var _ GitClient = &NativeGit{}
 
-func (n *NativeGit) Fetch(workspaceDir string) error {
-	gitFetch := exec.Command("git", "fetch", "origin")
+func (n *NativeGit) Fetch(workspaceDir, ref string) error {
+	gitFetch := exec.Command("git", "fetch", "origin", ref)
 	gitFetch.Dir = workspaceDir
 	if trace, err := gitFetch.CombinedOutput(); err != nil {
 		return fmt.Errorf("running git-fetch: %w\n\nCOMBINED OUTPUT:\n%s", err, trace)
@@ -326,13 +326,18 @@ func (n *GoGit) Push(local string, remote string, branch string) error {
 
 var _ GitClient = &GoGit{}
 
-func (n *GoGit) Fetch(workspaceDir string) error {
+func (n *GoGit) Fetch(workspaceDir, ref string) error {
 	r, err := git.PlainOpen(workspaceDir)
 	if err != nil {
 		return fmt.Errorf("go-git opening %q: %w", workspaceDir, err)
 	}
 
 	if err := r.Fetch(&git.FetchOptions{
+		// Apparently go-git's `fetch` doesn't automatically fetch all the remote branches without ref spec.
+		// That is, `go-git fetch` isn't the same as `go fetch` but `go-git fetch origin branch` is the same as
+		// `go fetch origin branch`.
+		// So, we explicitly specify the branch to fetch to make it the latter.
+		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", ref, ref))},
 		RemoteName: "origin",
 	}); err != nil && err.Error() != "already up-to-date" {
 		return fmt.Errorf("go-git fetching %q: %w", workspaceDir, err)
