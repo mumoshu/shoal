@@ -88,14 +88,6 @@ func (a *App) setEnv() {
 	os.Setenv("GOFISH_BINPATH", filepath.Join(GofishRoot, "bin"))
 }
 
-func (a *App) printf(format string, args ...interface{}) {
-	a.logger.Printf(format, args...)
-}
-
-func (a *App) println(msg string) {
-	a.logger.Println(msg)
-}
-
 func (a *App) Init() error {
 	a.setEnv()
 
@@ -116,8 +108,8 @@ func (a *App) Init() error {
 	}
 
 	if len(dirs) > 0 {
-		a.printf("The following new directories will be created:\n")
-		a.println(strings.Join(dirs, "\n"))
+		a.logger.Printf("The following new directories will be created:\n")
+		a.logger.Println(strings.Join(dirs, "\n"))
 
 		for _, d := range dirs {
 			if err := os.MkdirAll(d, 0755); err != nil {
@@ -151,7 +143,7 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 	listVersions := true
 	if listVersions {
-		a.println("Listing versions")
+		a.logger.Println("Listing versions")
 
 		h := sha1.New()
 		h.Write([]byte(rig))
@@ -172,7 +164,7 @@ func (a *App) Ensure(rig, food, constraint string) error {
 			}
 		}
 
-		a.printf("Reading workspace cache dir at %s", workspaceCacheDir)
+		a.logger.Printf("Reading workspace cache dir at %s", workspaceCacheDir)
 
 		fileInfoList, err := ioutil.ReadDir(workspaceCacheDir)
 		if err != nil {
@@ -190,7 +182,7 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 			rigIDFile := filepath.Join(d, "RIG")
 
-			a.printf("reading rig ID file at %s", rigIDFile)
+			a.logger.Printf("reading rig ID file at %s", rigIDFile)
 
 			bs, err := ioutil.ReadFile(rigIDFile)
 			if err != nil {
@@ -209,34 +201,34 @@ func (a *App) Ensure(rig, food, constraint string) error {
 		}
 
 		if workspaceDir != "" {
-			a.printf("locking workspace dir at %s", workspaceDir)
+			a.logger.Printf("locking workspace dir at %s", workspaceDir)
 			a.fetchedMutex.Lock()
 			defer func() {
-				a.printf("unlocking workspace dir at %s", workspaceDir)
+				a.logger.Printf("unlocking workspace dir at %s", workspaceDir)
 				a.fetchedMutex.Unlock()
 			}()
 
 			if fetched := a.fetched[workspaceDir]; !fetched {
-				a.printf("getting origin head branch in %s", workspaceDir)
+				a.logger.Printf("getting origin head branch in %s", workspaceDir)
 
 				b, err := g.ShowOriginHeadBranch(workspaceDir)
 				if err != nil {
 					return err
 				}
 
-				a.printf("fetching remote changes in %s", workspaceDir)
+				a.logger.Printf("fetching remote changes in %s", workspaceDir)
 
 				if err := g.Fetch(workspaceDir, b); err != nil {
 					return err
 				}
 
-				a.printf("force-checking-out remote changes in %s", workspaceDir)
+				a.logger.Printf("force-checking-out remote changes in %s", workspaceDir)
 
 				if err := g.ForceCheckout(workspaceDir, b); err != nil {
 					return err
 				}
 
-				a.printf("writing rig ID file in %s", workspaceDir)
+				a.logger.Printf("writing rig ID file in %s", workspaceDir)
 
 				// Force check-out using go-git seems to remove all the uncommitted changes to the worktree so
 				// the RIG file.
@@ -250,13 +242,13 @@ func (a *App) Ensure(rig, food, constraint string) error {
 		} else {
 			workspaceDir = filepath.Join(workspaceCacheDir, fmt.Sprintf("%d", len(fileInfoList)))
 
-			a.printf("cloning rig %q into %q", rig, workspaceDir)
+			a.logger.Printf("cloning rig %q into %q", rig, workspaceDir)
 
 			if err := g.Clone(rig, workspaceDir); err != nil {
 				return err
 			}
 
-			a.printf("creating RIG ID file in %s", workspaceDir)
+			a.logger.Printf("creating RIG ID file in %s", workspaceDir)
 
 			if err := ioutil.WriteFile(filepath.Join(workspaceDir, "RIG"), []byte(rig), 0644); err != nil {
 				return fmt.Errorf("writing RIG file: %w", err)
@@ -265,7 +257,7 @@ func (a *App) Ensure(rig, food, constraint string) error {
 
 		filePath := filepath.Join("Food", fmt.Sprintf("%s.lua", food))
 
-		a.printf("running git-log in %s for path %s", workspaceDir, filePath)
+		a.logger.Printf("running git-log in %s for path %s", workspaceDir, filePath)
 
 		gitLogOutput, err := g.Log(workspaceDir, filePath)
 		if err != nil {
