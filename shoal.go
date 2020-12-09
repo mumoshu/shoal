@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
@@ -413,7 +414,7 @@ func (a *App) InitGitProvider(config Config) error {
 func (a *App) Sync(config Config) (finalErr error) {
 	defer func() {
 		if err := recover(); err != nil {
-			finalErr = xerrors.Errorf("sync failed due to panic: %w", err)
+			finalErr = xerrors.Errorf("sync failed due to panic: %w\nSTACK TRACE:\n%s", err, debug.Stack())
 		}
 	}()
 
