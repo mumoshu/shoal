@@ -10,7 +10,10 @@ import (
 	"github.com/fishworks/gofish/pkg/rig/installer"
 	"github.com/yuin/gluamapper"
 	"github.com/yuin/gopher-lua"
+	"golang.org/x/xerrors"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +28,15 @@ var DefaultRootDir = ".shoal"
 
 var Version string
 
-func New() (*App, error) {
+type Option func(*App)
+
+func LogOutput(w io.Writer) Option {
+	return func(app *App) {
+		app.logOutput = w
+	}
+}
+
+func New(opts ...Option) (*App, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -38,6 +49,16 @@ func New() (*App, error) {
 		fetched: map[string]bool{},
 	}
 
+	for _, o := range opts {
+		o(app)
+	}
+
+	if app.logOutput == nil {
+		app.logOutput = os.Stderr
+	}
+
+	app.logger = log.New(app.logOutput, "", log.Lshortfile)
+
 	return app, nil
 }
 
@@ -48,6 +69,9 @@ type App struct {
 
 	fetchedMutex sync.Mutex
 	fetched      map[string]bool
+
+	logOutput io.Writer
+	logger    *log.Logger
 }
 
 type versionedFood struct {
@@ -64,11 +88,11 @@ func (a *App) setEnv() {
 }
 
 func (a *App) printf(format string, args ...interface{}) {
-	a.println(fmt.Sprintf(format, args...))
+	a.logger.Printf(format, args...)
 }
 
 func (a *App) println(msg string) {
-	fmt.Fprintln(os.Stderr, "shoal] "+msg)
+	a.logger.Println(msg)
 }
 
 func (a *App) Init() error {
@@ -386,7 +410,13 @@ func (a *App) InitGitProvider(config Config) error {
 	return nil
 }
 
-func (a *App) Sync(config Config) error {
+func (a *App) Sync(config Config) (finalErr error) {
+	defer func() {
+		if err := recover(); err != nil {
+			finalErr = xerrors.Errorf("sync failed due to panic: %w", err)
+		}
+	}()
+
 	rig := config.Rig
 
 	if v := config.Foods.Helm; v != "" {
