@@ -23,6 +23,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := app.InitGitProvider(shoal.Config{
+		Git: shoal.Git{
+			Provider: "go-git",
+			//Provider: "",
+		},
+	}); err != nil {
+		panic(err)
+	}
+
 	if err := app.Sync(shoal.Config{
 		Rig: rig,
 		Foods: shoal.Foods{

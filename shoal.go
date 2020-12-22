@@ -310,7 +310,12 @@ func (a *App) Ensure(rig, food, constraint string) error {
 			})
 		}
 
-		ohai.Ohaif("Fetched versions: %v", versions)
+		if len(versions) > 0 {
+			a.logger.Printf("Fetched %d versions for food %q", len(versions), versions[0].food.Name)
+			for i, v := range versions {
+				a.logger.Printf("%3d: %s %s", i, v.foodCommitID[:8], v.food.Version)
+			}
+		}
 	}
 
 	var version versionedFood
@@ -357,9 +362,13 @@ func (a *App) Ensure(rig, food, constraint string) error {
 		}
 	}
 
+	a.logger.Printf("installing %s %s...", version.food.Name, version.food.Version)
+
 	if err := version.food.Install(); err != nil {
 		return fmt.Errorf("installing %s %s: %w", version.food.Name, version.food.Version, err)
 	}
+
+	a.logger.Printf("installed %s %s.", version.food.Name, version.food.Version)
 
 	installDefaultFishFood := false
 	if installDefaultFishFood {
